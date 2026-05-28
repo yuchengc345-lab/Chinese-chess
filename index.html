@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GitHub 中國象棋 (手機優先版)</title>
+    <title>GitHub 中國象棋</title>
     <style>
         :root {
             --board-bg: #e6c280;
@@ -11,6 +11,7 @@
             --red-color: #c00000;
             --black-color: #111111;
         }
+        
         body {
             font-family: "KaiTi", "BiauKai", serif;
             display: flex;
@@ -18,149 +19,168 @@
             align-items: center;
             background-color: #f4f4f9;
             margin: 0;
-            padding: 15px 5px;
-            overflow-x: hidden; /* 防止手機端橫向滑動 */
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            user-select: none; /* 防止手機點擊時反白文字 */
         }
+
         h1 {
             color: #333;
-            margin-bottom: 5px;
-            font-size: 26px;
-            text-align: center;
+            margin: 10px 0;
+            font-size: 24px;
         }
+
         .status-panel {
             margin-bottom: 15px;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
         }
+
         .controls {
-            margin-bottom: 20px;
             display: flex;
-            flex-wrap: wrap; /* 手機端螢幕太小時自動換行 */
+            flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
+            margin-bottom: 15px;
             width: 100%;
+            max-width: 400px;
         }
+
         button {
             font-family: inherit;
             font-size: 16px;
             font-weight: bold;
-            padding: 12px 16px; /* 加大觸控面積 */
+            padding: 10px 14px;
             cursor: pointer;
             background-color: #fff;
             border: 2px solid #555;
             border-radius: 8px;
-            transition: 0.2s;
-            touch-action: manipulation; /* 提升手機端點擊反應速度，防止雙擊縮放 */
-        }
-        button:hover {
-            background-color: #eee;
-        }
-        
-        /* 遊戲區塊容器：處理手機端縮放的空間預留 */
-        #game-wrapper {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
-        #board {
-            position: relative;
-            width: 450px;
-            height: 500px;
-            background-color: var(--board-bg);
-            border: 3px solid #333;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            background-image: 
-                linear-gradient(#333 1px, transparent 1px),
-                linear-gradient(90deg, #333 1px, transparent 1px);
-            background-size: 50px 50px;
-            background-position: 25px 25px;
-        }
-
-        /* 手機螢幕自動等比縮放 */
-        @media (max-width: 480px) {
-            #board {
-                /* 依照螢幕寬度自動縮放棋盤比例 */
-                transform: scale(calc(100vw / 480));
-                transform-origin: top center;
-            }
-            #game-wrapper {
-                /* 配合縮放比例，預留相應的高度，避免遮擋下方元素 */
-                height: calc(500px * (100vw / 480));
-            }
-        }
-
-        #river {
-            position: absolute;
-            top: 225px;
-            left: 25px;
-            width: 400px;
-            height: 50px;
-            background-color: var(--board-bg);
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            font-size: 32px;
-            color: #333;
-            border-left: 1px solid #333;
-            border-right: 1px solid #333;
-            pointer-events: none;
-        }
-        .cell {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            transform: translate(-50%, -50%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
             touch-action: manipulation;
         }
+
+        button:hover { background-color: #eee; }
+
+        /* 棋盤主容器 */
+        #board-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px; /* 限制桌面版最大寬度，手機版自動適應 */
+            background-color: var(--board-bg);
+            padding: 20px; /* 預留邊緣空間，讓一半的棋子可以顯示 */
+            box-sizing: border-box;
+            border: 3px solid #4a3018;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+
+        /* SVG 繪製的標準棋盤線條 */
+        #board-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 互動層：用來放置棋子與感應點擊 */
+        #pieces-layer {
+            position: absolute;
+            top: 20px; left: 20px; right: 20px; bottom: 20px;
+        }
+
+        /* 隱形的點擊網格交叉點 */
+        .cell {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 10%;
+            height: 10%;
+            min-width: 35px;
+            min-height: 35px;
+            cursor: pointer;
+            z-index: 1;
+            touch-action: manipulation;
+        }
+
+        /* 棋子樣式 */
         .piece {
-            width: 40px;
-            height: 40px;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 9vw;
+            height: 9vw;
+            max-width: 38px;
+            max-height: 38px;
             background: radial-gradient(circle, #fff3d6, var(--piece-bg));
             border-radius: 50%;
             border: 2px solid #555;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 5vw; /* 隨螢幕縮放字體 */
             font-weight: bold;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            user-select: none;
-            transition: transform 0.1s;
+            z-index: 2;
+            pointer-events: none; /* 讓點擊穿透到下方的 cell，簡化邏輯 */
+            transition: transform 0.1s, box-shadow 0.1s;
         }
+
+        @media (min-width: 450px) {
+            .piece { font-size: 22px; }
+        }
+
         .piece.red { color: var(--red-color); border-color: var(--red-color); }
         .piece.black { color: var(--black-color); border-color: var(--black-color); }
+        
         .piece.selected {
-            transform: scale(1.15);
-            box-shadow: 0 0 10px 3px rgba(0, 150, 255, 0.7);
+            transform: translate(-50%, -50%) scale(1.15);
+            box-shadow: 0 0 12px 4px rgba(0, 150, 255, 0.8);
+            z-index: 3;
+            border-color: #007bff;
         }
     </style>
 </head>
 <body>
 
     <h1>GitHub 中國象棋</h1>
-    
     <div class="status-panel" id="statusText">紅方下棋</div>
     
     <div class="controls">
         <button onclick="undo()">↶ 悔棋</button>
-        <button onclick="restart()">↻ 重新開始</button>
+        <button onclick="restart()">↻ 重來</button>
         <button onclick="resign()">🏳 投降</button>
     </div>
 
-    <div id="game-wrapper">
-        <div id="board">
-            <div id="river"><span>楚 河</span><span>漢 界</span></div>
-        </div>
+    <div id="board-container">
+        <svg id="board-svg" viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="800" height="900" fill="none" stroke="#333" stroke-width="4"/>
+            <line x1="0" y1="100" x2="800" y2="100" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="200" x2="800" y2="200" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="300" x2="800" y2="300" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="400" x2="800" y2="400" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="500" x2="800" y2="500" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="600" x2="800" y2="600" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="700" x2="800" y2="700" stroke="#333" stroke-width="2"/>
+            <line x1="0" y1="800" x2="800" y2="800" stroke="#333" stroke-width="2"/>
+            <g stroke="#333" stroke-width="2">
+                <line x1="100" y1="0" x2="100" y2="400"/> <line x1="100" y1="500" x2="100" y2="900"/>
+                <line x1="200" y1="0" x2="200" y2="400"/> <line x1="200" y1="500" x2="200" y2="900"/>
+                <line x1="300" y1="0" x2="300" y2="400"/> <line x1="300" y1="500" x2="300" y2="900"/>
+                <line x1="400" y1="0" x2="400" y2="400"/> <line x1="400" y1="500" x2="400" y2="900"/>
+                <line x1="500" y1="0" x2="500" y2="400"/> <line x1="500" y1="500" x2="500" y2="900"/>
+                <line x1="600" y1="0" x2="600" y2="400"/> <line x1="600" y1="500" x2="600" y2="900"/>
+                <line x1="700" y1="0" x2="700" y2="400"/> <line x1="700" y1="500" x2="700" y2="900"/>
+            </g>
+            <g stroke="#333" stroke-width="2">
+                <line x1="300" y1="0" x2="500" y2="200"/> <line x1="500" y1="0" x2="300" y2="200"/>
+                <line x1="300" y1="900" x2="500" y2="700"/> <line x1="500" y1="900" x2="300" y2="700"/>
+            </g>
+            <text x="200" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="KaiTi, BiauKai, serif" fill="#333">楚 河</text>
+            <text x="600" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="KaiTi, BiauKai, serif" fill="#333">漢 界</text>
+        </svg>
+
+        <div id="pieces-layer"></div>
     </div>
 
     <script>
         const INITIAL_STATE = [
-            // 黑方
             { id: 'b_c1', type: '車', color: 'black', x: 0, y: 0 }, { id: 'b_h1', type: '馬', color: 'black', x: 1, y: 0 },
             { id: 'b_e1', type: '象', color: 'black', x: 2, y: 0 }, { id: 'b_a1', type: '士', color: 'black', x: 3, y: 0 },
             { id: 'b_g', type: '將', color: 'black', x: 4, y: 0 }, { id: 'b_a2', type: '士', color: 'black', x: 5, y: 0 },
@@ -170,7 +190,6 @@
             { id: 'b_s1', type: '卒', color: 'black', x: 0, y: 3 }, { id: 'b_s2', type: '卒', color: 'black', x: 2, y: 3 },
             { id: 'b_s3', type: '卒', color: 'black', x: 4, y: 3 }, { id: 'b_s4', type: '卒', color: 'black', x: 6, y: 3 },
             { id: 'b_s5', type: '卒', color: 'black', x: 8, y: 3 },
-            // 紅方
             { id: 'r_c1', type: '俥', color: 'red', x: 0, y: 9 }, { id: 'r_h1', type: '傌', color: 'red', x: 1, y: 9 },
             { id: 'r_e1', type: '相', color: 'red', x: 2, y: 9 }, { id: 'r_a1', type: '仕', color: 'red', x: 3, y: 9 },
             { id: 'r_g', type: '帥', color: 'red', x: 4, y: 9 }, { id: 'r_a2', type: '仕', color: 'red', x: 5, y: 9 },
@@ -188,9 +207,26 @@
         let history = [];
         let gameActive = true;
 
-        const boardEl = document.getElementById('board');
+        const piecesLayer = document.getElementById('pieces-layer');
         const statusEl = document.getElementById('statusText');
 
+        // 初始化隱形點擊網格 (只執行一次)
+        function initGrid() {
+            piecesLayer.innerHTML = '';
+            for (let y = 0; y <= 9; y++) {
+                for (let x = 0; x <= 8; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    // 精確對齊 SVG 交點
+                    cell.style.left = `calc(${x} * 12.5%)`;
+                    cell.style.top = `calc(${y} * 11.111%)`;
+                    cell.onclick = () => handleSquareClick(x, y);
+                    piecesLayer.appendChild(cell);
+                }
+            }
+        }
+
+        // 初始化遊戲數據
         function initGame() {
             pieces = JSON.parse(JSON.stringify(INITIAL_STATE));
             currentTurn = 'red';
@@ -198,34 +234,28 @@
             history = [];
             gameActive = true;
             updateStatus();
-            renderBoard();
+            renderPieces();
         }
 
-        function renderBoard() {
-            const oldCells = document.querySelectorAll('.cell');
-            oldCells.forEach(cell => cell.remove());
+        // 僅重新渲染棋子
+        function renderPieces() {
+            // 清除舊棋子
+            const oldPieces = document.querySelectorAll('.piece');
+            oldPieces.forEach(p => p.remove());
 
-            for (let y = 0; y <= 9; y++) {
-                for (let x = 0; x <= 8; x++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.style.left = (x * 50 + 25) + 'px';
-                    cell.style.top = (y * 50 + 25) + 'px';
-                    cell.onclick = () => handleSquareClick(x, y);
-
-                    const piece = pieces.find(p => p.x === x && p.y === y);
-                    if (piece) {
-                        const pieceEl = document.createElement('div');
-                        pieceEl.className = `piece ${piece.color}`;
-                        if (selectedPiece && selectedPiece.id === piece.id) {
-                            pieceEl.classList.add('selected');
-                        }
-                        pieceEl.innerText = piece.type;
-                        cell.appendChild(pieceEl);
-                    }
-                    boardEl.appendChild(cell);
+            pieces.forEach(piece => {
+                const pieceEl = document.createElement('div');
+                let classNames = `piece ${piece.color}`;
+                if (selectedPiece && selectedPiece.id === piece.id) {
+                    classNames += ' selected';
                 }
-            }
+                pieceEl.className = classNames;
+                pieceEl.innerText = piece.type;
+                // 定位座標，與網格交點邏輯相同
+                pieceEl.style.left = `calc(${piece.x} * 12.5%)`;
+                pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
+                piecesLayer.appendChild(pieceEl);
+            });
         }
 
         function handleSquareClick(x, y) {
@@ -233,14 +263,16 @@
             const targetPiece = pieces.find(p => p.x === x && p.y === y);
 
             if (selectedPiece) {
+                // 點到自己的棋子 -> 改選
                 if (targetPiece && targetPiece.color === currentTurn) {
                     selectedPiece = targetPiece;
-                    renderBoard();
+                    renderPieces();
                     return;
                 }
 
                 saveHistory();
 
+                // 點到敵人 -> 吃子
                 if (targetPiece && targetPiece.color !== currentTurn) {
                     pieces = pieces.filter(p => p.id !== targetPiece.id);
                     if (targetPiece.type === '將' || targetPiece.type === '帥') {
@@ -249,6 +281,7 @@
                     }
                 }
 
+                // 更新座標
                 const movingPiece = pieces.find(p => p.id === selectedPiece.id);
                 movingPiece.x = x;
                 movingPiece.y = y;
@@ -258,12 +291,13 @@
                     currentTurn = currentTurn === 'red' ? 'black' : 'red';
                     updateStatus();
                 }
-                renderBoard();
+                renderPieces();
 
             } else {
+                // 尚未選中棋子時，只能選自己回合的棋子
                 if (targetPiece && targetPiece.color === currentTurn) {
                     selectedPiece = targetPiece;
-                    renderBoard();
+                    renderPieces();
                 }
             }
         }
@@ -276,25 +310,22 @@
         }
 
         function undo() {
-            if (!gameActive && history.length > 0) {
-                gameActive = true; 
-            }
+            if (!gameActive && history.length > 0) gameActive = true; 
+            
             if (history.length > 0) {
                 const lastState = history.pop();
                 pieces = lastState.pieces;
                 currentTurn = lastState.turn;
                 selectedPiece = null;
                 updateStatus();
-                renderBoard();
+                renderPieces();
             } else {
                 alert("已經是開局狀態，無法悔棋！");
             }
         }
 
         function restart() {
-            if(confirm("確定要重新開始一局嗎？")) {
-                initGame();
-            }
+            if(confirm("確定要重新開始一局嗎？")) initGame();
         }
 
         function resign() {
@@ -313,6 +344,8 @@
             statusEl.style.color = currentTurn === 'red' ? '#c00000' : '#111111';
         }
 
+        // 頁面載入時啟動
+        initGrid();
         initGame();
     </script>
 </body>
