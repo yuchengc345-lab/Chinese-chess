@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GitHub 中國象棋</title>
+    <title>GitHub 中國象棋 Pro</title>
     <style>
         :root {
             --board-bg: #e6c280;
@@ -18,47 +18,76 @@
             align-items: center;
             background-color: #f4f4f9;
             margin: 0;
-            padding: 10px;
+            padding: 5px;
             box-sizing: border-box;
             overflow-x: hidden;
             user-select: none;
         }
-        h1 { color: #333; margin: 10px 0; font-size: 24px; }
+        h1 { color: #333; margin: 5px 0; font-size: 22px; }
         
         .status-container {
-            text-align: center;
-            margin-bottom: 15px;
-            height: 55px;
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; max-width: 400px; margin-bottom: 10px;
         }
-        .status-panel { font-size: 20px; font-weight: bold; }
-        .alert-text { font-size: 22px; font-weight: bold; color: #ff0000; margin-top: 5px; animation: blink 1s infinite; }
+        .status-panel { font-size: 18px; font-weight: bold; }
+        .alert-text { font-size: 18px; font-weight: bold; color: #ff0000; animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
         .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            width: 100%;
-            max-width: 400px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            margin-bottom: 10px; width: 100%; max-width: 400px;
         }
         button {
-            font-family: inherit; font-size: 16px; font-weight: bold;
-            padding: 10px 14px; cursor: pointer;
-            background-color: #fff; border: 2px solid #555; border-radius: 8px;
+            font-family: inherit; font-size: 14px; font-weight: bold;
+            padding: 8px 12px; cursor: pointer;
+            background-color: #fff; border: 2px solid #555; border-radius: 6px;
             touch-action: manipulation; transition: 0.2s;
         }
         button:hover { background-color: #eee; }
+        .flip-btn { background-color: #e0f0ff; border-color: #007bff; color: #004085; }
+
+        /* 吃子展示區 (墳場) */
+        .graveyard {
+            width: 100%; max-width: 400px; min-height: 28px;
+            display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; box-sizing: border-box;
+            background-color: #e8e8e8; border: 1px dashed #aaa; border-radius: 4px;
+        }
+        .graveyard-top { margin-bottom: 5px; }
+        .graveyard-bottom { margin-top: 5px; margin-bottom: 5px; }
+        .dead-piece {
+            width: 24px; height: 24px; font-size: 14px; font-weight: bold;
+            background: radial-gradient(circle, #fff3d6, var(--piece-bg));
+            border-radius: 50%; border: 1px solid #555;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        .dead-piece.red { color: var(--red-color); border-color: var(--red-color); }
+        .dead-piece.black { color: var(--black-color); border-color: var(--black-color); }
+
+        /* 記譜系統面板 */
+        .notation-panel {
+            width: 100%; max-width: 400px; height: 60px; overflow-y: auto;
+            background-color: #fff; border: 2px solid #333; border-radius: 4px;
+            padding: 5px; box-sizing: border-box; display: flex; flex-direction: column;
+            font-size: 14px; color: #333; gap: 2px;
+        }
+        .notation-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+        .notation-turn { width: 30px; color: #777; }
+        .notation-red { width: 40%; color: var(--red-color); font-weight: bold; }
+        .notation-black { width: 40%; color: var(--black-color); font-weight: bold; }
 
         #board-container {
             position: relative; width: 100%; max-width: 400px;
-            background-color: var(--board-bg); padding: 20px;
+            background-color: var(--board-bg); padding: 15px; /* 微調手機版邊距 */
             box-sizing: border-box; border: 3px solid #4a3018;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 4px;
+            transition: transform 0.6s ease-in-out; /* 翻轉動畫 */
         }
+        
+        #board-container.flipped { transform: rotate(180deg); }
+
         #board-svg { width: 100%; height: auto; display: block; }
-        #pieces-layer { position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; }
+        #pieces-layer { position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; }
         
         .cell {
             position: absolute; transform: translate(-50%, -50%);
@@ -68,52 +97,52 @@
         
         .piece {
             position: absolute; transform: translate(-50%, -50%);
-            width: 9vw; height: 9vw; max-width: 38px; max-height: 38px;
+            width: 9vw; height: 9vw; max-width: 36px; max-height: 36px;
             background: radial-gradient(circle, #fff3d6, var(--piece-bg));
             border-radius: 50%; border: 2px solid #555;
             display: flex; justify-content: center; align-items: center;
-            font-size: 5vw; font-weight: bold;
+            font-size: 4.5vw; font-weight: bold;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
             z-index: 3; pointer-events: none;
-            transition: transform 0.1s, box-shadow 0.1s, left 0.2s, top 0.2s;
+            transition: left 0.2s, top 0.2s, box-shadow 0.1s;
         }
         
-        @media (min-width: 450px) { .piece { font-size: 22px; } }
+        /* 處理翻轉時的字體回正 */
+        .piece .piece-text { transition: transform 0.6s ease-in-out; }
+        #board-container.flipped .piece .piece-text { transform: rotate(-180deg); }
+
+        @media (min-width: 400px) { .piece { font-size: 20px; } }
         
         .piece.red { color: var(--red-color); border-color: var(--red-color); }
         .piece.black { color: var(--black-color); border-color: var(--black-color); }
-        .piece.selected {
-            transform: translate(-50%, -50%) scale(1.15);
-            box-shadow: 0 0 12px 4px rgba(0, 150, 255, 0.8);
-            z-index: 4; border-color: #007bff;
-        }
+        .piece.selected { box-shadow: 0 0 12px 4px rgba(0, 150, 255, 0.8); z-index: 4; border-color: #007bff; }
+        #board-container:not(.flipped) .piece.selected { transform: translate(-50%, -50%) scale(1.15); }
+        #board-container.flipped .piece.selected { transform: translate(-50%, -50%) scale(1.15); }
 
-        /* 提示點樣式 */
         .hint {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            width: 3.5vw; height: 3.5vw; max-width: 16px; max-height: 16px;
-            background-color: rgba(0, 180, 0, 0.65);
-            border-radius: 50%;
-            z-index: 2; /* 位於網格之上，但在棋子之下 */
-            pointer-events: none; /* 點擊穿透，不會擋住下方的網格感應 */
-            box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+            position: absolute; transform: translate(-50%, -50%);
+            width: 12px; height: 12px;
+            background-color: rgba(0, 180, 0, 0.65); border-radius: 50%;
+            z-index: 2; pointer-events: none; box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
 
-    <h1>GitHub 中國象棋</h1>
+    <h1>GitHub 中國象棋 Pro</h1>
     <div class="status-container">
         <div class="status-panel" id="statusText">紅方下棋</div>
         <div class="alert-text" id="alertText"></div>
     </div>
     
     <div class="controls">
+        <button onclick="toggleFlip()" class="flip-btn">↹ 翻轉視角</button>
         <button onclick="undo()">↶ 悔棋</button>
         <button onclick="restart()">↻ 重來</button>
         <button onclick="resign()">🏳 投降</button>
     </div>
+
+    <div class="graveyard graveyard-top" id="graveyard-top"></div>
 
     <div id="board-container">
         <svg id="board-svg" viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg">
@@ -145,6 +174,10 @@
         <div id="pieces-layer"></div>
     </div>
 
+    <div class="graveyard graveyard-bottom" id="graveyard-bottom"></div>
+
+    <div class="notation-panel" id="notation-panel"></div>
+
     <script>
         const INITIAL_STATE = [
             { id: 'b_c1', type: '車', color: 'black', x: 0, y: 0 }, { id: 'b_h1', type: '馬', color: 'black', x: 1, y: 0 },
@@ -171,11 +204,22 @@
         let currentTurn = 'red';
         let selectedPiece = null;
         let history = [];
+        let moveRecord = []; // 記譜紀錄
         let gameActive = true;
+        let isFlipped = false;
 
         const piecesLayer = document.getElementById('pieces-layer');
         const statusEl = document.getElementById('statusText');
         const alertEl = document.getElementById('alertText');
+        const graveTop = document.getElementById('graveyard-top');
+        const graveBottom = document.getElementById('graveyard-bottom');
+        const notationPanel = document.getElementById('notation-panel');
+        const boardContainer = document.getElementById('board-container');
+
+        // 棋盤座標對應中文字 (紅方由右至左 9-1，黑方由右至左 1-9)
+        const redCols = ['九', '八', '七', '六', '五', '四', '三', '二', '一'];
+        const blackCols = ['9', '8', '7', '6', '5', '4', '3', '2', '1'];
+        const numToChinese = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
         function initGrid() {
             piecesLayer.innerHTML = '';
@@ -196,31 +240,89 @@
             currentTurn = 'red';
             selectedPiece = null;
             history = [];
+            moveRecord = [];
             gameActive = true;
             updateStatus();
             renderPieces();
+            renderGraveyard();
+            renderNotation();
+        }
+
+        // 翻轉視角按鈕邏輯
+        function toggleFlip() {
+            isFlipped = !isFlipped;
+            if(isFlipped) {
+                boardContainer.classList.add('flipped');
+            } else {
+                boardContainer.classList.remove('flipped');
+            }
+        }
+
+        // 產生標準記譜
+        function generateNotation(piece, startX, startY, endX, endY, state) {
+            let notation = '';
+            const isRed = piece.color === 'red';
+            const sCol = isRed ? redCols[startX] : blackCols[startX];
+            const eCol = isRed ? redCols[endX] : blackCols[endX];
+            
+            // 判斷是否為多顆同列相同棋子 (如前炮、後炮) - 這裡做簡單版
+            let sameColPieces = state.filter(p => p.type === piece.type && p.color === piece.color && p.x === startX);
+            let pieceName = piece.type;
+            if (sameColPieces.length > 1) {
+                // 如果同列有兩顆，判斷前後
+                let isFront = isRed ? startY < sameColPieces.find(p=>p.id!==piece.id).y : startY > sameColPieces.find(p=>p.id!==piece.id).y;
+                pieceName = isFront ? '前' + piece.type : '後' + piece.type;
+            } else {
+                pieceName = piece.type + sCol;
+            }
+
+            let direction = '';
+            let val = '';
+            const yDiff = Math.abs(endY - startY);
+
+            if (startY === endY) {
+                direction = '平';
+                val = eCol;
+            } else if ((isRed && endY < startY) || (!isRed && endY > startY)) {
+                direction = '進';
+            } else {
+                direction = '退';
+            }
+
+            // 直線兵種進退用數字，斜線兵種用目標列
+            if (direction !== '平') {
+                if (['帥', '將', '俥', '車', '炮', '砲', '兵', '卒'].includes(piece.type)) {
+                    val = isRed ? numToChinese[yDiff] : yDiff.toString();
+                } else {
+                    val = eCol;
+                }
+            }
+
+            return pieceName + direction + val;
         }
 
         function renderPieces() {
-            // 清除現有的棋子和提示點
             document.querySelectorAll('.piece').forEach(p => p.remove());
             document.querySelectorAll('.hint').forEach(h => h.remove());
 
-            // 渲染棋子
             pieces.forEach(piece => {
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `piece ${piece.color} ${selectedPiece && selectedPiece.id === piece.id ? 'selected' : ''}`;
-                pieceEl.innerText = piece.type;
+                
+                // 加入內部 span 來處理文字旋轉回正
+                const textEl = document.createElement('span');
+                textEl.className = 'piece-text';
+                textEl.innerText = piece.type;
+                pieceEl.appendChild(textEl);
+
                 pieceEl.style.left = `calc(${piece.x} * 12.5%)`;
                 pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
                 piecesLayer.appendChild(pieceEl);
             });
 
-            // 渲染提示點 (只有當有選中棋子，且遊戲還在進行時才運算)
             if (selectedPiece && gameActive) {
                 for (let x = 0; x <= 8; x++) {
                     for (let y = 0; y <= 9; y++) {
-                        // 如果該點是合法的移動目標，就加入提示點
                         if (validateFullMove(selectedPiece, x, y, pieces)) {
                             const hintEl = document.createElement('div');
                             hintEl.className = 'hint';
@@ -233,46 +335,70 @@
             }
         }
 
-        function isBasicMoveValid(piece, tx, ty, state) {
-            const sx = piece.x, sy = piece.y;
-            const dx = Math.abs(tx - sx), dy = Math.abs(ty - sy);
-            const target = state.find(p => p.x === tx && p.y === ty);
+        function renderGraveyard() {
+            graveTop.innerHTML = '';
+            graveBottom.innerHTML = '';
+            
+            // 找出死亡的棋子
+            const deadBlack = INITIAL_STATE.filter(p => p.color === 'black' && !pieces.find(cp => cp.id === p.id));
+            const deadRed = INITIAL_STATE.filter(p => p.color === 'red' && !pieces.find(cp => cp.id === p.id));
 
+            deadBlack.forEach(p => {
+                const el = document.createElement('div'); el.className = 'dead-piece black'; el.innerText = p.type;
+                graveTop.appendChild(el);
+            });
+            deadRed.forEach(p => {
+                const el = document.createElement('div'); el.className = 'dead-piece red'; el.innerText = p.type;
+                graveBottom.appendChild(el);
+            });
+        }
+
+        function renderNotation() {
+            notationPanel.innerHTML = '';
+            let turnCount = 1;
+            for (let i = 0; i < moveRecord.length; i += 2) {
+                const row = document.createElement('div');
+                row.className = 'notation-row';
+                
+                const turnStr = document.createElement('div'); turnStr.className = 'notation-turn'; turnStr.innerText = `${turnCount}.`;
+                const redStr = document.createElement('div'); redStr.className = 'notation-red'; redStr.innerText = moveRecord[i];
+                const blackStr = document.createElement('div'); blackStr.className = 'notation-black'; blackStr.innerText = moveRecord[i+1] || '';
+                
+                row.appendChild(turnStr); row.appendChild(redStr); row.appendChild(blackStr);
+                notationPanel.appendChild(row);
+                turnCount++;
+            }
+            // 自動滾動到最新
+            notationPanel.scrollTop = notationPanel.scrollHeight;
+        }
+
+        function isBasicMoveValid(piece, tx, ty, state) {
+            const sx = piece.x, sy = piece.y, dx = Math.abs(tx - sx), dy = Math.abs(ty - sy);
+            const target = state.find(p => p.x === tx && p.y === ty);
             if (target && target.color === piece.color) return false;
             if (dx === 0 && dy === 0) return false;
 
             let countBetween = 0;
             if (dx === 0) {
-                for (let y = Math.min(sy, ty) + 1; y < Math.max(sy, ty); y++) 
-                    if (state.find(p => p.x === sx && p.y === y)) countBetween++;
+                for (let y = Math.min(sy, ty) + 1; y < Math.max(sy, ty); y++) if (state.find(p => p.x === sx && p.y === y)) countBetween++;
             } else if (dy === 0) {
-                for (let x = Math.min(sx, tx) + 1; x < Math.max(sx, tx); x++) 
-                    if (state.find(p => p.x === x && p.y === sy)) countBetween++;
+                for (let x = Math.min(sx, tx) + 1; x < Math.max(sx, tx); x++) if (state.find(p => p.x === x && p.y === sy)) countBetween++;
             }
 
             switch (piece.type) {
-                case '帥': case '將':
-                    if (dx + dy !== 1 || tx < 3 || tx > 5) return false;
-                    return piece.color === 'red' ? (ty >= 7) : (ty <= 2);
-                case '仕': case '士':
-                    if (dx !== 1 || dy !== 1 || tx < 3 || tx > 5) return false;
-                    return piece.color === 'red' ? (ty >= 7) : (ty <= 2);
+                case '帥': case '將': if (dx + dy !== 1 || tx < 3 || tx > 5) return false; return piece.color === 'red' ? (ty >= 7) : (ty <= 2);
+                case '仕': case '士': if (dx !== 1 || dy !== 1 || tx < 3 || tx > 5) return false; return piece.color === 'red' ? (ty >= 7) : (ty <= 2);
                 case '相': case '象':
                     if (dx !== 2 || dy !== 2) return false;
                     if (piece.color === 'red' && ty < 5) return false;
                     if (piece.color === 'black' && ty > 4) return false;
-                    if (state.find(p => p.x === sx + (tx - sx)/2 && p.y === sy + (ty - sy)/2)) return false;
-                    return true;
+                    if (state.find(p => p.x === sx + (tx - sx)/2 && p.y === sy + (ty - sy)/2)) return false; return true;
                 case '傌': case '馬':
                     if (!((dx === 1 && dy === 2) || (dx === 2 && dy === 1))) return false;
                     if (dx === 2 && state.find(p => p.x === sx + (tx - sx)/2 && p.y === sy)) return false;
-                    if (dy === 2 && state.find(p => p.x === sx && p.y === sy + (ty - sy)/2)) return false;
-                    return true;
-                case '俥': case '車':
-                    return (dx === 0 || dy === 0) && countBetween === 0;
-                case '炮': case '砲':
-                    if (dx !== 0 && dy !== 0) return false;
-                    return target ? (countBetween === 1) : (countBetween === 0);
+                    if (dy === 2 && state.find(p => p.x === sx && p.y === sy + (ty - sy)/2)) return false; return true;
+                case '俥': case '車': return (dx === 0 || dy === 0) && countBetween === 0;
+                case '炮': case '砲': if (dx !== 0 && dy !== 0) return false; return target ? (countBetween === 1) : (countBetween === 0);
                 case '兵': case '卒':
                     if (piece.color === 'red') {
                         if (sy >= 5) return dy === 1 && ty - sy === -1 && dx === 0;
@@ -281,42 +407,31 @@
                         if (sy <= 4) return dy === 1 && ty - sy === 1 && dx === 0;
                         return (dy === 1 && ty - sy === 1 && dx === 0) || (dy === 0 && dx === 1);
                     }
-            }
-            return false;
+            } return false;
         }
 
         function isFlyingGeneral(state) {
-            const rk = state.find(p => p.type === '帥');
-            const bk = state.find(p => p.type === '將');
+            const rk = state.find(p => p.type === '帥'), bk = state.find(p => p.type === '將');
             if (!rk || !bk || rk.x !== bk.x) return false;
-            for (let y = bk.y + 1; y < rk.y; y++) {
-                if (state.find(p => p.x === rk.x && p.y === y)) return false;
-            }
+            for (let y = bk.y + 1; y < rk.y; y++) if (state.find(p => p.x === rk.x && p.y === y)) return false;
             return true;
         }
 
         function isInCheck(color, state) {
-            const kingType = color === 'red' ? '帥' : '將';
-            const king = state.find(p => p.type === kingType);
+            const kingType = color === 'red' ? '帥' : '將', king = state.find(p => p.type === kingType);
             if (!king) return false;
-            
             const enemies = state.filter(p => p.color !== color);
             return enemies.some(enemy => isBasicMoveValid(enemy, king.x, king.y, state));
         }
 
         function validateFullMove(piece, tx, ty, state) {
             if (!isBasicMoveValid(piece, tx, ty, state)) return false;
-            
             const tempState = JSON.parse(JSON.stringify(state));
-            
             const filteredState = tempState.filter(p => !(p.x === tx && p.y === ty));
             const movingPiece = filteredState.find(p => p.id === piece.id);
-            movingPiece.x = tx; 
-            movingPiece.y = ty; 
-
+            movingPiece.x = tx; movingPiece.y = ty; 
             if (isFlyingGeneral(filteredState)) return false;
             if (isInCheck(piece.color, filteredState)) return false;
-
             return true;
         }
 
@@ -329,8 +444,7 @@
                         if (validateFullMove(p, x, y, state)) return false;
                     }
                 }
-            }
-            return true;
+            } return true;
         }
 
         function handleSquareClick(x, y) {
@@ -338,15 +452,16 @@
             const targetPiece = pieces.find(p => p.x === x && p.y === y);
 
             if (selectedPiece) {
-                // 如果點選了自己的其他棋子，切換選擇
                 if (targetPiece && targetPiece.color === currentTurn) {
-                    selectedPiece = targetPiece;
-                    renderPieces(); // 這裡會自動重新計算新選擇棋子的提示點
-                    return;
+                    selectedPiece = targetPiece; renderPieces(); return;
                 }
 
                 if (validateFullMove(selectedPiece, x, y, pieces)) {
                     saveHistory();
+                    
+                    // 紀錄標準記譜
+                    const notation = generateNotation(selectedPiece, selectedPiece.x, selectedPiece.y, x, y, pieces);
+                    moveRecord.push(notation);
 
                     pieces = pieces.filter(p => !(p.x === x && p.y === y));
                     const movingPiece = pieces.find(p => p.id === selectedPiece.id);
@@ -367,57 +482,43 @@
                     }
 
                     updateStatus();
-                } else {
-                    // 點擊無效位置時，取消選取並清空提示點
-                    selectedPiece = null;
-                }
-                renderPieces();
-
-            } else {
-                if (targetPiece && targetPiece.color === currentTurn) {
-                    selectedPiece = targetPiece;
                     renderPieces();
+                    renderGraveyard();
+                    renderNotation();
+                } else {
+                    selectedPiece = null; renderPieces();
                 }
+            } else {
+                if (targetPiece && targetPiece.color === currentTurn) { selectedPiece = targetPiece; renderPieces(); }
             }
         }
 
         function saveHistory() {
-            history.push({ pieces: JSON.parse(JSON.stringify(pieces)), turn: currentTurn, alert: alertEl.innerText });
+            history.push({ 
+                pieces: JSON.parse(JSON.stringify(pieces)), turn: currentTurn, alert: alertEl.innerText, moves: [...moveRecord] 
+            });
         }
 
         function undo() {
             if (!gameActive && history.length > 0) gameActive = true; 
             if (history.length > 0) {
                 const lastState = history.pop();
-                pieces = lastState.pieces;
-                currentTurn = lastState.turn;
-                alertEl.innerText = lastState.alert || "";
-                selectedPiece = null;
-                updateStatus();
-                renderPieces();
-            } else {
-                alert("已經是開局狀態，無法悔棋！");
-            }
+                pieces = lastState.pieces; currentTurn = lastState.turn; alertEl.innerText = lastState.alert || "";
+                moveRecord = lastState.moves; selectedPiece = null;
+                updateStatus(); renderPieces(); renderGraveyard(); renderNotation();
+            } else { alert("已經是開局狀態，無法悔棋！"); }
         }
 
         function restart() {
-            if(confirm("確定要重新開始一局嗎？")) {
-                alertEl.innerText = "";
-                initGame();
-            }
+            if(confirm("確定要重新開始一局嗎？")) { alertEl.innerText = ""; initGame(); }
         }
 
         function resign() {
             if (!gameActive) return;
             if(confirm(`確定要投降嗎？`)) {
-                gameActive = false;
-                const winner = currentTurn === 'red' ? '黑' : '紅';
-                statusEl.innerText = `遊戲結束`;
-                alertEl.innerText = `${currentTurn === 'red' ? '紅' : '黑'}方投降，${winner}方獲勝！`;
-                alert(`${winner}方獲勝！`);
-                // 遊戲結束清空提示點
-                selectedPiece = null;
-                renderPieces();
+                gameActive = false; const winner = currentTurn === 'red' ? '黑' : '紅';
+                statusEl.innerText = `遊戲結束`; alertEl.innerText = `${currentTurn === 'red' ? '紅' : '黑'}方投降，${winner}方獲勝！`;
+                alert(`${winner}方獲勝！`); selectedPiece = null; renderPieces();
             }
         }
 
@@ -428,8 +529,7 @@
             }
         }
 
-        initGrid();
-        initGame();
+        initGrid(); initGame();
     </script>
 </body>
 </html>
