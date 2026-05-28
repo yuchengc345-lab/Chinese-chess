@@ -11,7 +11,6 @@
             --red-color: #c00000;
             --black-color: #111111;
         }
-        
         body {
             font-family: "KaiTi", "BiauKai", serif;
             display: flex;
@@ -22,20 +21,18 @@
             padding: 10px;
             box-sizing: border-box;
             overflow-x: hidden;
-            user-select: none; /* 防止手機點擊時反白文字 */
+            user-select: none;
         }
-
-        h1 {
-            color: #333;
-            margin: 10px 0;
-            font-size: 24px;
-        }
-
-        .status-panel {
+        h1 { color: #333; margin: 10px 0; font-size: 24px; }
+        
+        .status-container {
+            text-align: center;
             margin-bottom: 15px;
-            font-size: 20px;
-            font-weight: bold;
+            height: 55px; /* 固定高度防止跳動 */
         }
+        .status-panel { font-size: 20px; font-weight: bold; }
+        .alert-text { font-size: 22px; font-weight: bold; color: #ff0000; margin-top: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
         .controls {
             display: flex;
@@ -46,101 +43,55 @@
             width: 100%;
             max-width: 400px;
         }
-
         button {
-            font-family: inherit;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 10px 14px;
-            cursor: pointer;
-            background-color: #fff;
-            border: 2px solid #555;
-            border-radius: 8px;
-            touch-action: manipulation;
+            font-family: inherit; font-size: 16px; font-weight: bold;
+            padding: 10px 14px; cursor: pointer;
+            background-color: #fff; border: 2px solid #555; border-radius: 8px;
+            touch-action: manipulation; transition: 0.2s;
         }
-
         button:hover { background-color: #eee; }
 
-        /* 棋盤主容器 */
         #board-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px; /* 限制桌面版最大寬度，手機版自動適應 */
-            background-color: var(--board-bg);
-            padding: 20px; /* 預留邊緣空間，讓一半的棋子可以顯示 */
-            box-sizing: border-box;
-            border: 3px solid #4a3018;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            border-radius: 4px;
+            position: relative; width: 100%; max-width: 400px;
+            background-color: var(--board-bg); padding: 20px;
+            box-sizing: border-box; border: 3px solid #4a3018;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 4px;
         }
-
-        /* SVG 繪製的標準棋盤線條 */
-        #board-svg {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* 互動層：用來放置棋子與感應點擊 */
-        #pieces-layer {
-            position: absolute;
-            top: 20px; left: 20px; right: 20px; bottom: 20px;
-        }
-
-        /* 隱形的點擊網格交叉點 */
+        #board-svg { width: 100%; height: auto; display: block; }
+        #pieces-layer { position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; }
         .cell {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            width: 10%;
-            height: 10%;
-            min-width: 35px;
-            min-height: 35px;
-            cursor: pointer;
-            z-index: 1;
-            touch-action: manipulation;
+            position: absolute; transform: translate(-50%, -50%);
+            width: 10%; height: 10%; min-width: 35px; min-height: 35px;
+            cursor: pointer; z-index: 1; touch-action: manipulation;
         }
-
-        /* 棋子樣式 */
         .piece {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            width: 9vw;
-            height: 9vw;
-            max-width: 38px;
-            max-height: 38px;
+            position: absolute; transform: translate(-50%, -50%);
+            width: 9vw; height: 9vw; max-width: 38px; max-height: 38px;
             background: radial-gradient(circle, #fff3d6, var(--piece-bg));
-            border-radius: 50%;
-            border: 2px solid #555;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 5vw; /* 隨螢幕縮放字體 */
-            font-weight: bold;
+            border-radius: 50%; border: 2px solid #555;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 5vw; font-weight: bold;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 2;
-            pointer-events: none; /* 讓點擊穿透到下方的 cell，簡化邏輯 */
-            transition: transform 0.1s, box-shadow 0.1s;
+            z-index: 2; pointer-events: none;
+            transition: transform 0.1s, box-shadow 0.1s, left 0.2s, top 0.2s;
         }
-
-        @media (min-width: 450px) {
-            .piece { font-size: 22px; }
-        }
-
+        @media (min-width: 450px) { .piece { font-size: 22px; } }
         .piece.red { color: var(--red-color); border-color: var(--red-color); }
         .piece.black { color: var(--black-color); border-color: var(--black-color); }
-        
         .piece.selected {
             transform: translate(-50%, -50%) scale(1.15);
             box-shadow: 0 0 12px 4px rgba(0, 150, 255, 0.8);
-            z-index: 3;
-            border-color: #007bff;
+            z-index: 3; border-color: #007bff;
         }
     </style>
 </head>
 <body>
 
     <h1>GitHub 中國象棋</h1>
-    <div class="status-panel" id="statusText">紅方下棋</div>
+    <div class="status-container">
+        <div class="status-panel" id="statusText">紅方下棋</div>
+        <div class="alert-text" id="alertText"></div>
+    </div>
     
     <div class="controls">
         <button onclick="undo()">↶ 悔棋</button>
@@ -175,7 +126,6 @@
             <text x="200" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="KaiTi, BiauKai, serif" fill="#333">楚 河</text>
             <text x="600" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="KaiTi, BiauKai, serif" fill="#333">漢 界</text>
         </svg>
-
         <div id="pieces-layer"></div>
     </div>
 
@@ -183,7 +133,7 @@
         const INITIAL_STATE = [
             { id: 'b_c1', type: '車', color: 'black', x: 0, y: 0 }, { id: 'b_h1', type: '馬', color: 'black', x: 1, y: 0 },
             { id: 'b_e1', type: '象', color: 'black', x: 2, y: 0 }, { id: 'b_a1', type: '士', color: 'black', x: 3, y: 0 },
-            { id: 'b_g', type: '將', color: 'black', x: 4, y: 0 }, { id: 'b_a2', type: '士', color: 'black', x: 5, y: 0 },
+            { id: 'b_g',  type: '將', color: 'black', x: 4, y: 0 }, { id: 'b_a2', type: '士', color: 'black', x: 5, y: 0 },
             { id: 'b_e2', type: '象', color: 'black', x: 6, y: 0 }, { id: 'b_h2', type: '馬', color: 'black', x: 7, y: 0 },
             { id: 'b_c2', type: '車', color: 'black', x: 8, y: 0 },
             { id: 'b_p1', type: '砲', color: 'black', x: 1, y: 2 }, { id: 'b_p2', type: '砲', color: 'black', x: 7, y: 2 },
@@ -192,7 +142,7 @@
             { id: 'b_s5', type: '卒', color: 'black', x: 8, y: 3 },
             { id: 'r_c1', type: '俥', color: 'red', x: 0, y: 9 }, { id: 'r_h1', type: '傌', color: 'red', x: 1, y: 9 },
             { id: 'r_e1', type: '相', color: 'red', x: 2, y: 9 }, { id: 'r_a1', type: '仕', color: 'red', x: 3, y: 9 },
-            { id: 'r_g', type: '帥', color: 'red', x: 4, y: 9 }, { id: 'r_a2', type: '仕', color: 'red', x: 5, y: 9 },
+            { id: 'r_g',  type: '帥', color: 'red', x: 4, y: 9 }, { id: 'r_a2', type: '仕', color: 'red', x: 5, y: 9 },
             { id: 'r_e2', type: '相', color: 'red', x: 6, y: 9 }, { id: 'r_h2', type: '傌', color: 'red', x: 7, y: 9 },
             { id: 'r_c2', type: '俥', color: 'red', x: 8, y: 9 },
             { id: 'r_p1', type: '炮', color: 'red', x: 1, y: 7 }, { id: 'r_p2', type: '炮', color: 'red', x: 7, y: 7 },
@@ -209,15 +159,14 @@
 
         const piecesLayer = document.getElementById('pieces-layer');
         const statusEl = document.getElementById('statusText');
+        const alertEl = document.getElementById('alertText');
 
-        // 初始化隱形點擊網格 (只執行一次)
         function initGrid() {
             piecesLayer.innerHTML = '';
             for (let y = 0; y <= 9; y++) {
                 for (let x = 0; x <= 8; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    // 精確對齊 SVG 交點
                     cell.style.left = `calc(${x} * 12.5%)`;
                     cell.style.top = `calc(${y} * 11.111%)`;
                     cell.onclick = () => handleSquareClick(x, y);
@@ -226,7 +175,6 @@
             }
         }
 
-        // 初始化遊戲數據
         function initGame() {
             pieces = JSON.parse(JSON.stringify(INITIAL_STATE));
             currentTurn = 'red';
@@ -237,25 +185,127 @@
             renderPieces();
         }
 
-        // 僅重新渲染棋子
         function renderPieces() {
-            // 清除舊棋子
-            const oldPieces = document.querySelectorAll('.piece');
-            oldPieces.forEach(p => p.remove());
-
+            document.querySelectorAll('.piece').forEach(p => p.remove());
             pieces.forEach(piece => {
                 const pieceEl = document.createElement('div');
-                let classNames = `piece ${piece.color}`;
-                if (selectedPiece && selectedPiece.id === piece.id) {
-                    classNames += ' selected';
-                }
-                pieceEl.className = classNames;
+                pieceEl.className = `piece ${piece.color} ${selectedPiece && selectedPiece.id === piece.id ? 'selected' : ''}`;
                 pieceEl.innerText = piece.type;
-                // 定位座標，與網格交點邏輯相同
                 pieceEl.style.left = `calc(${piece.x} * 12.5%)`;
                 pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
                 piecesLayer.appendChild(pieceEl);
             });
+        }
+
+        /* 核心：判斷單一棋子的物理走法是否合法 (包含塞象眼、蹩馬腿) */
+        function isBasicMoveValid(piece, tx, ty, state) {
+            const sx = piece.x, sy = piece.y;
+            const dx = Math.abs(tx - sx), dy = Math.abs(ty - sy);
+            const target = state.find(p => p.x === tx && p.y === ty);
+
+            // 不能吃自己的棋子，不能原地不動
+            if (target && target.color === piece.color) return false;
+            if (dx === 0 && dy === 0) return false;
+
+            // 計算直線路徑上的障礙物數量 (給車、炮使用)
+            let countBetween = 0;
+            if (dx === 0) {
+                for (let y = Math.min(sy, ty) + 1; y < Math.max(sy, ty); y++) 
+                    if (state.find(p => p.x === sx && p.y === y)) countBetween++;
+            } else if (dy === 0) {
+                for (let x = Math.min(sx, tx) + 1; x < Math.max(sx, tx); x++) 
+                    if (state.find(p => p.x === x && p.y === sy)) countBetween++;
+            }
+
+            switch (piece.type) {
+                case '帥': case '將':
+                    if (dx + dy !== 1 || tx < 3 || tx > 5) return false;
+                    return piece.color === 'red' ? (ty >= 7) : (ty <= 2);
+                case '仕': case '士':
+                    if (dx !== 1 || dy !== 1 || tx < 3 || tx > 5) return false;
+                    return piece.color === 'red' ? (ty >= 7) : (ty <= 2);
+                case '相': case '象':
+                    if (dx !== 2 || dy !== 2) return false;
+                    if (piece.color === 'red' && ty < 5) return false; // 不能飛過河
+                    if (piece.color === 'black' && ty > 4) return false;
+                    // 塞象眼判定
+                    if (state.find(p => p.x === sx + (tx - sx)/2 && p.y === sy + (ty - sy)/2)) return false;
+                    return true;
+                case '傌': case '馬':
+                    if (!((dx === 1 && dy === 2) || (dx === 2 && dy === 1))) return false;
+                    // 蹩馬腿判定
+                    if (dx === 2 && state.find(p => p.x === sx + (tx - sx)/2 && p.y === sy)) return false;
+                    if (dy === 2 && state.find(p => p.x === sx && p.y === sy + (ty - sy)/2)) return false;
+                    return true;
+                case '俥': case '車':
+                    return (dx === 0 || dy === 0) && countBetween === 0;
+                case '炮': case '砲':
+                    if (dx !== 0 && dy !== 0) return false;
+                    return target ? (countBetween === 1) : (countBetween === 0);
+                case '兵': case '卒':
+                    if (piece.color === 'red') {
+                        if (sy >= 5) return dy === 1 && ty - sy === -1 && dx === 0; // 未過河只能向前
+                        return (dy === 1 && ty - sy === -1 && dx === 0) || (dy === 0 && dx === 1); // 過河可平移
+                    } else {
+                        if (sy <= 4) return dy === 1 && ty - sy === 1 && dx === 0;
+                        return (dy === 1 && ty - sy === 1 && dx === 0) || (dy === 0 && dx === 1);
+                    }
+            }
+            return false;
+        }
+
+        /* 判斷是否為飛將 (雙方老將直視且中間無障礙) */
+        function isFlyingGeneral(state) {
+            const rk = state.find(p => p.type === '帥');
+            const bk = state.find(p => p.type === '將');
+            if (!rk || !bk || rk.x !== bk.x) return false;
+            for (let y = bk.y + 1; y < rk.y; y++) {
+                if (state.find(p => p.x === rk.x && p.y === y)) return false;
+            }
+            return true;
+        }
+
+        /* 判斷某方是否被將軍 */
+        function isInCheck(color, state) {
+            const kingType = color === 'red' ? '帥' : '將';
+            const king = state.find(p => p.type === kingType);
+            if (!king) return false;
+            
+            // 檢查敵方所有的棋子，是否有一步能走到我方王的位置
+            const enemies = state.filter(p => p.color !== color);
+            return enemies.some(enemy => isBasicMoveValid(enemy, king.x, king.y, state));
+        }
+
+        /* 完整檢驗這步棋是否合法 (包含規則、飛將、是否送王) */
+        function validateFullMove(piece, tx, ty, state) {
+            if (!isBasicMoveValid(piece, tx, ty, state)) return false;
+            
+            // 模擬走這步棋
+            const tempState = state.filter(p => !(p.x === tx && p.y === ty)); // 移除被吃子
+            const movingPiece = tempState.find(p => p.id === piece.id);
+            movingPiece.x = tx; movingPiece.y = ty; // 移動
+
+            // 走完後不能造成飛將，也不能讓自己的王被將軍
+            if (isFlyingGeneral(tempState)) return false;
+            if (isInCheck(piece.color, tempState)) return false;
+
+            return true;
+        }
+
+        /* 判斷某方是否絕殺 (被將軍且無步可走) */
+        function isCheckmate(color, state) {
+            if (!isInCheck(color, state)) return false; // 必須先被將軍
+
+            const myPieces = state.filter(p => p.color === color);
+            for (let p of myPieces) {
+                for (let x = 0; x <= 8; x++) {
+                    for (let y = 0; y <= 9; y++) {
+                        // 如果有任何一步是合法的（走完不被將軍），就不算絕殺
+                        if (validateFullMove(p, x, y, state)) return false;
+                    }
+                }
+            }
+            return true;
         }
 
         function handleSquareClick(x, y) {
@@ -263,38 +313,45 @@
             const targetPiece = pieces.find(p => p.x === x && p.y === y);
 
             if (selectedPiece) {
-                // 點到自己的棋子 -> 改選
+                // 改選自己的棋子
                 if (targetPiece && targetPiece.color === currentTurn) {
                     selectedPiece = targetPiece;
                     renderPieces();
                     return;
                 }
 
-                saveHistory();
+                // 進行完整規則驗證
+                if (validateFullMove(selectedPiece, x, y, pieces)) {
+                    saveHistory();
 
-                // 點到敵人 -> 吃子
-                if (targetPiece && targetPiece.color !== currentTurn) {
-                    pieces = pieces.filter(p => p.id !== targetPiece.id);
-                    if (targetPiece.type === '將' || targetPiece.type === '帥') {
-                        gameActive = false;
-                        setTimeout(() => alert(`${currentTurn === 'red' ? '紅' : '黑'}方獲勝！`), 100);
-                    }
-                }
-
-                // 更新座標
-                const movingPiece = pieces.find(p => p.id === selectedPiece.id);
-                movingPiece.x = x;
-                movingPiece.y = y;
-
-                selectedPiece = null;
-                if(gameActive) {
+                    // 執行吃子與移動
+                    pieces = pieces.filter(p => !(p.x === x && p.y === y));
+                    const movingPiece = pieces.find(p => p.id === selectedPiece.id);
+                    movingPiece.x = x; movingPiece.y = y;
+                    
+                    selectedPiece = null;
                     currentTurn = currentTurn === 'red' ? 'black' : 'red';
+                    
+                    // 換對手後，檢查對手是否被將軍或絕殺
+                    alertEl.innerText = "";
+                    if (isCheckmate(currentTurn, pieces)) {
+                        gameActive = false;
+                        const winner = currentTurn === 'red' ? '黑' : '紅';
+                        alertEl.innerText = `絕殺！${winner}方獲勝！`;
+                        statusEl.innerText = "遊戲結束";
+                        setTimeout(() => alert(`絕殺！${winner}方獲勝！`), 100);
+                    } else if (isInCheck(currentTurn, pieces)) {
+                        alertEl.innerText = "將軍！";
+                    }
+
                     updateStatus();
+                } else {
+                    // 如果點擊了不合法的位置，取消選取或提示 (這裡簡單處理為取消閃爍重置)
+                    selectedPiece = null;
                 }
                 renderPieces();
 
             } else {
-                // 尚未選中棋子時，只能選自己回合的棋子
                 if (targetPiece && targetPiece.color === currentTurn) {
                     selectedPiece = targetPiece;
                     renderPieces();
@@ -303,10 +360,7 @@
         }
 
         function saveHistory() {
-            history.push({
-                pieces: JSON.parse(JSON.stringify(pieces)),
-                turn: currentTurn
-            });
+            history.push({ pieces: JSON.parse(JSON.stringify(pieces)), turn: currentTurn, alert: alertEl.innerText });
         }
 
         function undo() {
@@ -316,6 +370,7 @@
                 const lastState = history.pop();
                 pieces = lastState.pieces;
                 currentTurn = lastState.turn;
+                alertEl.innerText = lastState.alert || "";
                 selectedPiece = null;
                 updateStatus();
                 renderPieces();
@@ -325,7 +380,10 @@
         }
 
         function restart() {
-            if(confirm("確定要重新開始一局嗎？")) initGame();
+            if(confirm("確定要重新開始一局嗎？")) {
+                alertEl.innerText = "";
+                initGame();
+            }
         }
 
         function resign() {
@@ -333,18 +391,19 @@
             if(confirm(`確定要投降嗎？`)) {
                 gameActive = false;
                 const winner = currentTurn === 'red' ? '黑' : '紅';
-                statusEl.innerText = `${currentTurn === 'red' ? '紅' : '黑'}方投降，${winner}方獲勝！`;
-                statusEl.style.color = currentTurn === 'red' ? 'black' : '#c00000';
+                statusEl.innerText = `遊戲結束`;
+                alertEl.innerText = `${currentTurn === 'red' ? '紅' : '黑'}方投降，${winner}方獲勝！`;
                 alert(`${winner}方獲勝！`);
             }
         }
 
         function updateStatus() {
-            statusEl.innerText = currentTurn === 'red' ? '紅方下棋' : '黑方下棋';
-            statusEl.style.color = currentTurn === 'red' ? '#c00000' : '#111111';
+            if(gameActive) {
+                statusEl.innerText = currentTurn === 'red' ? '紅方下棋' : '黑方下棋';
+                statusEl.style.color = currentTurn === 'red' ? '#c00000' : '#111111';
+            }
         }
 
-        // 頁面載入時啟動
         initGrid();
         initGame();
     </script>
