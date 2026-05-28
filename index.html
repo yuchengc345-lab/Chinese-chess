@@ -59,11 +59,13 @@
         }
         #board-svg { width: 100%; height: auto; display: block; }
         #pieces-layer { position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; }
+        
         .cell {
             position: absolute; transform: translate(-50%, -50%);
             width: 10%; height: 10%; min-width: 35px; min-height: 35px;
             cursor: pointer; z-index: 1; touch-action: manipulation;
         }
+        
         .piece {
             position: absolute; transform: translate(-50%, -50%);
             width: 9vw; height: 9vw; max-width: 38px; max-height: 38px;
@@ -72,16 +74,30 @@
             display: flex; justify-content: center; align-items: center;
             font-size: 5vw; font-weight: bold;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            z-index: 2; pointer-events: none;
+            z-index: 3; pointer-events: none;
             transition: transform 0.1s, box-shadow 0.1s, left 0.2s, top 0.2s;
         }
+        
         @media (min-width: 450px) { .piece { font-size: 22px; } }
+        
         .piece.red { color: var(--red-color); border-color: var(--red-color); }
         .piece.black { color: var(--black-color); border-color: var(--black-color); }
         .piece.selected {
             transform: translate(-50%, -50%) scale(1.15);
             box-shadow: 0 0 12px 4px rgba(0, 150, 255, 0.8);
-            z-index: 3; border-color: #007bff;
+            z-index: 4; border-color: #007bff;
+        }
+
+        /* 提示點樣式 */
+        .hint {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 3.5vw; height: 3.5vw; max-width: 16px; max-height: 16px;
+            background-color: rgba(0, 180, 0, 0.65);
+            border-radius: 50%;
+            z-index: 2; /* 位於網格之上，但在棋子之下 */
+            pointer-events: none; /* 點擊穿透，不會擋住下方的網格感應 */
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -186,7 +202,11 @@
         }
 
         function renderPieces() {
+            // 清除現有的棋子和提示點
             document.querySelectorAll('.piece').forEach(p => p.remove());
+            document.querySelectorAll('.hint').forEach(h => h.remove());
+
+            // 渲染棋子
             pieces.forEach(piece => {
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `piece ${piece.color} ${selectedPiece && selectedPiece.id === piece.id ? 'selected' : ''}`;
@@ -195,6 +215,22 @@
                 pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
                 piecesLayer.appendChild(pieceEl);
             });
+
+            // 渲染提示點 (只有當有選中棋子，且遊戲還在進行時才運算)
+            if (selectedPiece && gameActive) {
+                for (let x = 0; x <= 8; x++) {
+                    for (let y = 0; y <= 9; y++) {
+                        // 如果該點是合法的移動目標，就加入提示點
+                        if (validateFullMove(selectedPiece, x, y, pieces)) {
+                            const hintEl = document.createElement('div');
+                            hintEl.className = 'hint';
+                            hintEl.style.left = `calc(${x} * 12.5%)`;
+                            hintEl.style.top = `calc(${y} * 11.111%)`;
+                            piecesLayer.appendChild(hintEl);
+                        }
+                    }
+                }
+            }
         }
 
         function isBasicMoveValid(piece, tx, ty, state) {
@@ -271,16 +307,13 @@
         function validateFullMove(piece, tx, ty, state) {
             if (!isBasicMoveValid(piece, tx, ty, state)) return false;
             
-            // 【修復】深拷貝：徹底複製一個獨立的狀態陣列，避免污染真實棋盤
             const tempState = JSON.parse(JSON.stringify(state));
             
-            // 在模擬環境中移除被吃掉的棋子，並更新移動中的棋子
             const filteredState = tempState.filter(p => !(p.x === tx && p.y === ty));
             const movingPiece = filteredState.find(p => p.id === piece.id);
             movingPiece.x = tx; 
             movingPiece.y = ty; 
 
-            // 走完後不能造成飛將，也不能讓自己的王被將軍
             if (isFlyingGeneral(filteredState)) return false;
             if (isInCheck(piece.color, filteredState)) return false;
 
@@ -305,13 +338,13 @@
             const targetPiece = pieces.find(p => p.x === x && p.y === y);
 
             if (selectedPiece) {
+                // 如果點選了自己的其他棋子，切換選擇
                 if (targetPiece && targetPiece.color === currentTurn) {
                     selectedPiece = targetPiece;
-                    renderPieces();
+                    renderPieces(); // 這裡會自動重新計算新選擇棋子的提示點
                     return;
                 }
 
-                // 現在的 validateFullMove 已經絕對安全，不會引發棋盤混亂
                 if (validateFullMove(selectedPiece, x, y, pieces)) {
                     saveHistory();
 
@@ -335,6 +368,7 @@
 
                     updateStatus();
                 } else {
+                    // 點擊無效位置時，取消選取並清空提示點
                     selectedPiece = null;
                 }
                 renderPieces();
@@ -381,6 +415,9 @@
                 statusEl.innerText = `遊戲結束`;
                 alertEl.innerText = `${currentTurn === 'red' ? '紅' : '黑'}方投降，${winner}方獲勝！`;
                 alert(`${winner}方獲勝！`);
+                // 遊戲結束清空提示點
+                selectedPiece = null;
+                renderPieces();
             }
         }
 
