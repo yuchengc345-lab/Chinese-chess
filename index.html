@@ -1,91 +1,153 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" data-theme="traditional">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GitHub 中國象棋 Pro</title>
     <style>
+        /* 定義所有主題的 CSS 變數 */
         :root {
+            /* 傳統版 (預設) */
+            --bg-color: #f4f4f9;
             --board-bg: #e6c280;
-            --piece-bg: #f9e3b1;
+            --piece-bg-grad: radial-gradient(circle, #fff3d6, #f9e3b1);
+            --piece-border: #555;
             --red-color: #c00000;
             --black-color: #111111;
+            --board-border: #4a3018;
+            --line-color: #333;
+            --text-color: #333;
+            --glow-color: rgba(0, 150, 255, 0.8);
+            --font-family: "KaiTi", "BiauKai", serif;
+            --panel-bg: #fff;
         }
+
+        [data-theme="cute"] {
+            /* 可愛版 */
+            --bg-color: #fff0f5;
+            --board-bg: #ffe4e1;
+            --piece-bg-grad: radial-gradient(circle, #ffffff, #ffd1dc);
+            --piece-border: #ffb6c1;
+            --red-color: #ff69b4;
+            --black-color: #4da6ff; /* 用可愛天藍取代黑色 */
+            --board-border: #ffb6c1;
+            --line-color: #ffc0cb;
+            --text-color: #ff69b4;
+            --glow-color: rgba(255, 182, 193, 0.9);
+            --font-family: "Comic Sans MS", "Poplar Std", sans-serif;
+            --panel-bg: #fffafa;
+        }
+
+        [data-theme="scifi"] {
+            /* 科技版 */
+            --bg-color: #0b0c10;
+            --board-bg: #1f2833;
+            --piece-bg-grad: radial-gradient(circle, #2c3e50, #111);
+            --piece-border: #0ff;
+            --red-color: #ff00ff; /* 霓虹紫紅 */
+            --black-color: #00ffff; /* 霓虹青 */
+            --board-border: #0ff;
+            --line-color: #45a29e;
+            --text-color: #66fcf1;
+            --glow-color: rgba(0, 255, 255, 0.9);
+            --font-family: "Courier New", monospace;
+            --panel-bg: #1f2833;
+        }
+
+        [data-theme="horror"] {
+            /* 恐怖版 */
+            --bg-color: #111111;
+            --board-bg: #2a0000;
+            --piece-bg-grad: radial-gradient(circle, #333, #000);
+            --piece-border: #500;
+            --red-color: #d00000;
+            --black-color: #aaaaaa;
+            --board-border: #000;
+            --line-color: #500;
+            --text-color: #800;
+            --glow-color: rgba(200, 0, 0, 0.9);
+            --font-family: "MingLiU", "PMingLiU", serif;
+            --panel-bg: #1a1a1a;
+        }
+
         body {
-            font-family: "KaiTi", "BiauKai", serif;
+            font-family: var(--font-family);
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #f4f4f9;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             margin: 0;
             padding: 5px;
             box-sizing: border-box;
             overflow-x: hidden;
             user-select: none;
+            transition: background-color 0.4s, color 0.4s;
         }
-        h1 { color: #333; margin: 5px 0; font-size: 22px; }
+        
+        h1 { margin: 5px 0; font-size: 22px; }
         
         .status-container {
             display: flex; justify-content: space-between; align-items: center;
             width: 100%; max-width: 400px; margin-bottom: 10px;
         }
-        .status-panel { font-size: 18px; font-weight: bold; }
-        .alert-text { font-size: 18px; font-weight: bold; color: #ff0000; animation: blink 1s infinite; }
+        .status-panel { font-size: 18px; font-weight: bold; transition: color 0.3s; }
+        .alert-text { font-size: 18px; font-weight: bold; color: var(--red-color); animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
         .controls {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
             margin-bottom: 10px; width: 100%; max-width: 400px;
         }
-        button {
-            font-family: inherit; font-size: 14px; font-weight: bold;
-            padding: 8px 12px; cursor: pointer;
-            background-color: #fff; border: 2px solid #555; border-radius: 6px;
-            touch-action: manipulation; transition: 0.2s;
+        
+        button, select {
+            font-family: var(--font-family); font-size: 14px; font-weight: bold;
+            padding: 8px 10px; cursor: pointer;
+            background-color: var(--panel-bg); color: var(--text-color);
+            border: 2px solid var(--line-color); border-radius: 6px;
+            touch-action: manipulation; transition: 0.3s;
         }
-        button:hover { background-color: #eee; }
-        .flip-btn { background-color: #e0f0ff; border-color: #007bff; color: #004085; }
+        button:hover, select:hover { filter: brightness(1.1); }
+        .flip-btn { background-color: var(--panel-bg); border-color: var(--black-color); }
 
-        /* 吃子展示區 (墳場) */
         .graveyard {
             width: 100%; max-width: 400px; min-height: 28px;
             display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; box-sizing: border-box;
-            background-color: #e8e8e8; border: 1px dashed #aaa; border-radius: 4px;
+            background-color: var(--panel-bg); border: 1px dashed var(--line-color); border-radius: 4px;
+            transition: background-color 0.4s;
         }
         .graveyard-top { margin-bottom: 5px; }
         .graveyard-bottom { margin-top: 5px; margin-bottom: 5px; }
+        
         .dead-piece {
             width: 24px; height: 24px; font-size: 14px; font-weight: bold;
-            background: radial-gradient(circle, #fff3d6, var(--piece-bg));
-            border-radius: 50%; border: 1px solid #555;
+            background: var(--piece-bg-grad); border: 1px solid var(--piece-border); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
         }
         .dead-piece.red { color: var(--red-color); border-color: var(--red-color); }
         .dead-piece.black { color: var(--black-color); border-color: var(--black-color); }
 
-        /* 記譜系統面板 */
         .notation-panel {
             width: 100%; max-width: 400px; height: 60px; overflow-y: auto;
-            background-color: #fff; border: 2px solid #333; border-radius: 4px;
+            background-color: var(--panel-bg); border: 2px solid var(--line-color); border-radius: 4px;
             padding: 5px; box-sizing: border-box; display: flex; flex-direction: column;
-            font-size: 14px; color: #333; gap: 2px;
+            font-size: 14px; color: var(--text-color); gap: 2px;
+            transition: background-color 0.4s;
         }
-        .notation-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 2px; }
-        .notation-turn { width: 30px; color: #777; }
+        .notation-row { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line-color); padding-bottom: 2px; }
+        .notation-turn { width: 30px; opacity: 0.7; }
         .notation-red { width: 40%; color: var(--red-color); font-weight: bold; }
         .notation-black { width: 40%; color: var(--black-color); font-weight: bold; }
 
         #board-container {
             position: relative; width: 100%; max-width: 400px;
-            background-color: var(--board-bg); padding: 15px; /* 微調手機版邊距 */
-            box-sizing: border-box; border: 3px solid #4a3018;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 4px;
-            transition: transform 0.6s ease-in-out; /* 翻轉動畫 */
+            background-color: var(--board-bg); padding: 15px;
+            box-sizing: border-box; border: 3px solid var(--board-border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); border-radius: 4px;
+            transition: transform 0.6s ease-in-out, background-color 0.4s, border-color 0.4s;
         }
-        
         #board-container.flipped { transform: rotate(180deg); }
-
         #board-svg { width: 100%; height: auto; display: block; }
         #pieces-layer { position: absolute; top: 15px; left: 15px; right: 15px; bottom: 15px; }
         
@@ -98,16 +160,14 @@
         .piece {
             position: absolute; transform: translate(-50%, -50%);
             width: 9vw; height: 9vw; max-width: 36px; max-height: 36px;
-            background: radial-gradient(circle, #fff3d6, var(--piece-bg));
-            border-radius: 50%; border: 2px solid #555;
+            background: var(--piece-bg-grad); border: 2px solid var(--piece-border); border-radius: 50%;
             display: flex; justify-content: center; align-items: center;
             font-size: 4.5vw; font-weight: bold;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
             z-index: 3; pointer-events: none;
-            transition: left 0.2s, top 0.2s, box-shadow 0.1s;
+            transition: left 0.2s, top 0.2s, box-shadow 0.1s, background 0.4s;
         }
         
-        /* 處理翻轉時的字體回正 */
         .piece .piece-text { transition: transform 0.6s ease-in-out; }
         #board-container.flipped .piece .piece-text { transform: rotate(-180deg); }
 
@@ -115,28 +175,33 @@
         
         .piece.red { color: var(--red-color); border-color: var(--red-color); }
         .piece.black { color: var(--black-color); border-color: var(--black-color); }
-        .piece.selected { box-shadow: 0 0 12px 4px rgba(0, 150, 255, 0.8); z-index: 4; border-color: #007bff; }
-        #board-container:not(.flipped) .piece.selected { transform: translate(-50%, -50%) scale(1.15); }
-        #board-container.flipped .piece.selected { transform: translate(-50%, -50%) scale(1.15); }
-
+        .piece.selected { box-shadow: 0 0 15px 5px var(--glow-color); z-index: 4; border-color: var(--glow-color); }
+        
         .hint {
             position: absolute; transform: translate(-50%, -50%);
             width: 12px; height: 12px;
-            background-color: rgba(0, 180, 0, 0.65); border-radius: 50%;
-            z-index: 2; pointer-events: none; box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+            background-color: var(--glow-color); border-radius: 50%;
+            z-index: 2; pointer-events: none; box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
 <body>
 
     <h1>GitHub 中國象棋 Pro</h1>
+    
     <div class="status-container">
         <div class="status-panel" id="statusText">紅方下棋</div>
         <div class="alert-text" id="alertText"></div>
     </div>
     
     <div class="controls">
-        <button onclick="toggleFlip()" class="flip-btn">↹ 翻轉視角</button>
+        <select id="themeSelect" onchange="changeTheme()">
+            <option value="traditional">傳統版</option>
+            <option value="cute">可愛版</option>
+            <option value="scifi">科技版</option>
+            <option value="horror">恐怖版</option>
+        </select>
+        <button onclick="toggleFlip()" class="flip-btn">↹ 翻轉</button>
         <button onclick="undo()">↶ 悔棋</button>
         <button onclick="restart()">↻ 重來</button>
         <button onclick="resign()">🏳 投降</button>
@@ -146,16 +211,16 @@
 
     <div id="board-container">
         <svg id="board-svg" viewBox="0 0 800 900" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0" y="0" width="800" height="900" fill="none" stroke="#333" stroke-width="4"/>
-            <line x1="0" y1="100" x2="800" y2="100" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="200" x2="800" y2="200" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="300" x2="800" y2="300" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="400" x2="800" y2="400" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="500" x2="800" y2="500" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="600" x2="800" y2="600" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="700" x2="800" y2="700" stroke="#333" stroke-width="2"/>
-            <line x1="0" y1="800" x2="800" y2="800" stroke="#333" stroke-width="2"/>
-            <g stroke="#333" stroke-width="2">
+            <rect x="0" y="0" width="800" height="900" fill="none" stroke="var(--board-border)" stroke-width="6"/>
+            <line x1="0" y1="100" x2="800" y2="100" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="200" x2="800" y2="200" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="300" x2="800" y2="300" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="400" x2="800" y2="400" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="500" x2="800" y2="500" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="600" x2="800" y2="600" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="700" x2="800" y2="700" stroke="var(--line-color)" stroke-width="2"/>
+            <line x1="0" y1="800" x2="800" y2="800" stroke="var(--line-color)" stroke-width="2"/>
+            <g stroke="var(--line-color)" stroke-width="2">
                 <line x1="100" y1="0" x2="100" y2="400"/> <line x1="100" y1="500" x2="100" y2="900"/>
                 <line x1="200" y1="0" x2="200" y2="400"/> <line x1="200" y1="500" x2="200" y2="900"/>
                 <line x1="300" y1="0" x2="300" y2="400"/> <line x1="300" y1="500" x2="300" y2="900"/>
@@ -164,18 +229,17 @@
                 <line x1="600" y1="0" x2="600" y2="400"/> <line x1="600" y1="500" x2="600" y2="900"/>
                 <line x1="700" y1="0" x2="700" y2="400"/> <line x1="700" y1="500" x2="700" y2="900"/>
             </g>
-            <g stroke="#333" stroke-width="2">
+            <g stroke="var(--line-color)" stroke-width="2">
                 <line x1="300" y1="0" x2="500" y2="200"/> <line x1="500" y1="0" x2="300" y2="200"/>
                 <line x1="300" y1="900" x2="500" y2="700"/> <line x1="500" y1="900" x2="300" y2="700"/>
             </g>
-            <text x="200" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="KaiTi, BiauKai, serif" fill="#333">楚 河</text>
-            <text x="600" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" font-family="KaiTi, BiauKai, serif" fill="#333">漢 界</text>
+            <text x="200" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="var(--line-color)">楚 河</text>
+            <text x="600" y="450" font-size="60" font-weight="bold" text-anchor="middle" dominant-baseline="central" fill="var(--line-color)">漢 界</text>
         </svg>
         <div id="pieces-layer"></div>
     </div>
 
     <div class="graveyard graveyard-bottom" id="graveyard-bottom"></div>
-
     <div class="notation-panel" id="notation-panel"></div>
 
     <script>
@@ -204,7 +268,7 @@
         let currentTurn = 'red';
         let selectedPiece = null;
         let history = [];
-        let moveRecord = []; // 記譜紀錄
+        let moveRecord = [];
         let gameActive = true;
         let isFlipped = false;
 
@@ -215,11 +279,18 @@
         const graveBottom = document.getElementById('graveyard-bottom');
         const notationPanel = document.getElementById('notation-panel');
         const boardContainer = document.getElementById('board-container');
+        const themeSelect = document.getElementById('themeSelect');
 
-        // 棋盤座標對應中文字 (紅方由右至左 9-1，黑方由右至左 1-9)
         const redCols = ['九', '八', '七', '六', '五', '四', '三', '二', '一'];
         const blackCols = ['9', '8', '7', '6', '5', '4', '3', '2', '1'];
         const numToChinese = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+        // 【新增】切換主題邏輯
+        function changeTheme() {
+            const theme = themeSelect.value;
+            document.documentElement.setAttribute('data-theme', theme);
+            saveToLocalStorage();
+        }
 
         function initGrid() {
             piecesLayer.innerHTML = '';
@@ -235,69 +306,81 @@
             }
         }
 
+        function saveToLocalStorage() {
+            const dataToSave = {
+                pieces, currentTurn, history, moveRecord, gameActive, isFlipped,
+                alertText: alertEl.innerText,
+                theme: document.documentElement.getAttribute('data-theme') // 儲存主題
+            };
+            localStorage.setItem('gh_chess_pro_save', JSON.stringify(dataToSave));
+        }
+
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('gh_chess_pro_save');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                // 恢復主題
+                if(data.theme) {
+                    document.documentElement.setAttribute('data-theme', data.theme);
+                    themeSelect.value = data.theme;
+                }
+
+                if (data.gameActive && data.history && data.history.length > 0) {
+                    if (confirm("檢測到您有一局未完成的對局，是否繼續遊玩？")) {
+                        pieces = data.pieces; currentTurn = data.currentTurn;
+                        history = data.history; moveRecord = data.moveRecord;
+                        gameActive = data.gameActive; isFlipped = data.isFlipped;
+                        alertEl.innerText = data.alertText || "";
+                        
+                        if(isFlipped) boardContainer.classList.add('flipped');
+                        else boardContainer.classList.remove('flipped');
+
+                        updateStatus(); renderPieces(); renderGraveyard(); renderNotation();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         function initGame() {
             pieces = JSON.parse(JSON.stringify(INITIAL_STATE));
-            currentTurn = 'red';
-            selectedPiece = null;
-            history = [];
-            moveRecord = [];
-            gameActive = true;
-            updateStatus();
-            renderPieces();
-            renderGraveyard();
-            renderNotation();
+            currentTurn = 'red'; selectedPiece = null; history = []; moveRecord = [];
+            gameActive = true; isFlipped = false; boardContainer.classList.remove('flipped');
+            alertEl.innerText = "";
+            updateStatus(); renderPieces(); renderGraveyard(); renderNotation();
+            saveToLocalStorage(); 
         }
 
-        // 翻轉視角按鈕邏輯
         function toggleFlip() {
             isFlipped = !isFlipped;
-            if(isFlipped) {
-                boardContainer.classList.add('flipped');
-            } else {
-                boardContainer.classList.remove('flipped');
-            }
+            if(isFlipped) boardContainer.classList.add('flipped');
+            else boardContainer.classList.remove('flipped');
+            saveToLocalStorage();
         }
 
-        // 產生標準記譜
         function generateNotation(piece, startX, startY, endX, endY, state) {
             let notation = '';
             const isRed = piece.color === 'red';
             const sCol = isRed ? redCols[startX] : blackCols[startX];
             const eCol = isRed ? redCols[endX] : blackCols[endX];
-            
-            // 判斷是否為多顆同列相同棋子 (如前炮、後炮) - 這裡做簡單版
             let sameColPieces = state.filter(p => p.type === piece.type && p.color === piece.color && p.x === startX);
             let pieceName = piece.type;
             if (sameColPieces.length > 1) {
-                // 如果同列有兩顆，判斷前後
                 let isFront = isRed ? startY < sameColPieces.find(p=>p.id!==piece.id).y : startY > sameColPieces.find(p=>p.id!==piece.id).y;
                 pieceName = isFront ? '前' + piece.type : '後' + piece.type;
-            } else {
-                pieceName = piece.type + sCol;
-            }
+            } else { pieceName = piece.type + sCol; }
 
-            let direction = '';
-            let val = '';
-            const yDiff = Math.abs(endY - startY);
+            let direction = ''; let val = ''; const yDiff = Math.abs(endY - startY);
+            if (startY === endY) { direction = '平'; val = eCol; }
+            else if ((isRed && endY < startY) || (!isRed && endY > startY)) { direction = '進'; }
+            else { direction = '退'; }
 
-            if (startY === endY) {
-                direction = '平';
-                val = eCol;
-            } else if ((isRed && endY < startY) || (!isRed && endY > startY)) {
-                direction = '進';
-            } else {
-                direction = '退';
-            }
-
-            // 直線兵種進退用數字，斜線兵種用目標列
             if (direction !== '平') {
-                if (['帥', '將', '俥', '車', '炮', '砲', '兵', '卒'].includes(piece.type)) {
-                    val = isRed ? numToChinese[yDiff] : yDiff.toString();
-                } else {
-                    val = eCol;
-                }
+                if (['帥', '將', '俥', '車', '炮', '砲', '兵', '卒'].includes(piece.type)) { val = isRed ? numToChinese[yDiff] : yDiff.toString(); } 
+                else { val = eCol; }
             }
-
             return pieceName + direction + val;
         }
 
@@ -308,15 +391,10 @@
             pieces.forEach(piece => {
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `piece ${piece.color} ${selectedPiece && selectedPiece.id === piece.id ? 'selected' : ''}`;
-                
-                // 加入內部 span 來處理文字旋轉回正
                 const textEl = document.createElement('span');
-                textEl.className = 'piece-text';
-                textEl.innerText = piece.type;
+                textEl.className = 'piece-text'; textEl.innerText = piece.type;
                 pieceEl.appendChild(textEl);
-
-                pieceEl.style.left = `calc(${piece.x} * 12.5%)`;
-                pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
+                pieceEl.style.left = `calc(${piece.x} * 12.5%)`; pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
                 piecesLayer.appendChild(pieceEl);
             });
 
@@ -326,8 +404,7 @@
                         if (validateFullMove(selectedPiece, x, y, pieces)) {
                             const hintEl = document.createElement('div');
                             hintEl.className = 'hint';
-                            hintEl.style.left = `calc(${x} * 12.5%)`;
-                            hintEl.style.top = `calc(${y} * 11.111%)`;
+                            hintEl.style.left = `calc(${x} * 12.5%)`; hintEl.style.top = `calc(${y} * 11.111%)`;
                             piecesLayer.appendChild(hintEl);
                         }
                     }
@@ -336,39 +413,27 @@
         }
 
         function renderGraveyard() {
-            graveTop.innerHTML = '';
-            graveBottom.innerHTML = '';
-            
-            // 找出死亡的棋子
+            graveTop.innerHTML = ''; graveBottom.innerHTML = '';
             const deadBlack = INITIAL_STATE.filter(p => p.color === 'black' && !pieces.find(cp => cp.id === p.id));
             const deadRed = INITIAL_STATE.filter(p => p.color === 'red' && !pieces.find(cp => cp.id === p.id));
-
             deadBlack.forEach(p => {
-                const el = document.createElement('div'); el.className = 'dead-piece black'; el.innerText = p.type;
-                graveTop.appendChild(el);
+                const el = document.createElement('div'); el.className = 'dead-piece black'; el.innerText = p.type; graveTop.appendChild(el);
             });
             deadRed.forEach(p => {
-                const el = document.createElement('div'); el.className = 'dead-piece red'; el.innerText = p.type;
-                graveBottom.appendChild(el);
+                const el = document.createElement('div'); el.className = 'dead-piece red'; el.innerText = p.type; graveBottom.appendChild(el);
             });
         }
 
         function renderNotation() {
-            notationPanel.innerHTML = '';
-            let turnCount = 1;
+            notationPanel.innerHTML = ''; let turnCount = 1;
             for (let i = 0; i < moveRecord.length; i += 2) {
-                const row = document.createElement('div');
-                row.className = 'notation-row';
-                
+                const row = document.createElement('div'); row.className = 'notation-row';
                 const turnStr = document.createElement('div'); turnStr.className = 'notation-turn'; turnStr.innerText = `${turnCount}.`;
                 const redStr = document.createElement('div'); redStr.className = 'notation-red'; redStr.innerText = moveRecord[i];
                 const blackStr = document.createElement('div'); blackStr.className = 'notation-black'; blackStr.innerText = moveRecord[i+1] || '';
-                
-                row.appendChild(turnStr); row.appendChild(redStr); row.appendChild(blackStr);
-                notationPanel.appendChild(row);
+                row.appendChild(turnStr); row.appendChild(redStr); row.appendChild(blackStr); notationPanel.appendChild(row);
                 turnCount++;
             }
-            // 自動滾動到最新
             notationPanel.scrollTop = notationPanel.scrollHeight;
         }
 
@@ -459,7 +524,6 @@
                 if (validateFullMove(selectedPiece, x, y, pieces)) {
                     saveHistory();
                     
-                    // 紀錄標準記譜
                     const notation = generateNotation(selectedPiece, selectedPiece.x, selectedPiece.y, x, y, pieces);
                     moveRecord.push(notation);
 
@@ -472,19 +536,14 @@
                     
                     alertEl.innerText = "";
                     if (isCheckmate(currentTurn, pieces)) {
-                        gameActive = false;
-                        const winner = currentTurn === 'red' ? '黑' : '紅';
-                        alertEl.innerText = `絕殺！${winner}方獲勝！`;
-                        statusEl.innerText = "遊戲結束";
+                        gameActive = false; const winner = currentTurn === 'red' ? '黑' : '紅';
+                        alertEl.innerText = `絕殺！${winner}方獲勝！`; statusEl.innerText = "遊戲結束";
                         setTimeout(() => alert(`絕殺！${winner}方獲勝！`), 100);
                     } else if (isInCheck(currentTurn, pieces)) {
                         alertEl.innerText = "將軍！";
                     }
 
-                    updateStatus();
-                    renderPieces();
-                    renderGraveyard();
-                    renderNotation();
+                    updateStatus(); renderPieces(); renderGraveyard(); renderNotation(); saveToLocalStorage(); 
                 } else {
                     selectedPiece = null; renderPieces();
                 }
@@ -505,12 +564,12 @@
                 const lastState = history.pop();
                 pieces = lastState.pieces; currentTurn = lastState.turn; alertEl.innerText = lastState.alert || "";
                 moveRecord = lastState.moves; selectedPiece = null;
-                updateStatus(); renderPieces(); renderGraveyard(); renderNotation();
+                updateStatus(); renderPieces(); renderGraveyard(); renderNotation(); saveToLocalStorage();
             } else { alert("已經是開局狀態，無法悔棋！"); }
         }
 
         function restart() {
-            if(confirm("確定要重新開始一局嗎？")) { alertEl.innerText = ""; initGame(); }
+            if(confirm("確定要重新開始一局嗎？")) { initGame(); }
         }
 
         function resign() {
@@ -518,18 +577,20 @@
             if(confirm(`確定要投降嗎？`)) {
                 gameActive = false; const winner = currentTurn === 'red' ? '黑' : '紅';
                 statusEl.innerText = `遊戲結束`; alertEl.innerText = `${currentTurn === 'red' ? '紅' : '黑'}方投降，${winner}方獲勝！`;
-                alert(`${winner}方獲勝！`); selectedPiece = null; renderPieces();
+                alert(`${winner}方獲勝！`); selectedPiece = null; renderPieces(); saveToLocalStorage(); 
             }
         }
 
         function updateStatus() {
             if(gameActive) {
                 statusEl.innerText = currentTurn === 'red' ? '紅方下棋' : '黑方下棋';
-                statusEl.style.color = currentTurn === 'red' ? '#c00000' : '#111111';
+                // 這裡使用 CSS 變數，讓它依照目前主題的紅黑色動態變色
+                statusEl.style.color = currentTurn === 'red' ? 'var(--red-color)' : 'var(--black-color)';
             }
         }
 
-        initGrid(); initGame();
+        initGrid(); 
+        if (!loadFromLocalStorage()) { initGame(); }
     </script>
 </body>
 </html>
