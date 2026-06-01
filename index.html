@@ -29,7 +29,7 @@
             --piece-bg-grad: radial-gradient(circle, #ffffff, #ffd1dc);
             --piece-border: #ffb6c1;
             --red-color: #ff69b4;
-            --black-color: #4da6ff; /* 用可愛天藍取代黑色 */
+            --black-color: #4da6ff;
             --board-border: #ffb6c1;
             --line-color: #ffc0cb;
             --text-color: #ff69b4;
@@ -44,8 +44,8 @@
             --board-bg: #1f2833;
             --piece-bg-grad: radial-gradient(circle, #2c3e50, #111);
             --piece-border: #0ff;
-            --red-color: #ff00ff; /* 霓虹紫紅 */
-            --black-color: #00ffff; /* 霓虹青 */
+            --red-color: #ff00ff;
+            --black-color: #00ffff;
             --board-border: #0ff;
             --line-color: #45a29e;
             --text-color: #66fcf1;
@@ -168,8 +168,15 @@
             transition: left 0.2s, top 0.2s, box-shadow 0.1s, background 0.4s;
         }
         
-        .piece .piece-text { transition: transform 0.6s ease-in-out; }
-        #board-container.flipped .piece .piece-text { transform: rotate(-180deg); }
+        /* === 核心修改區塊：讓雙方棋子面對面 === */
+        .piece .piece-text { 
+            transition: transform 0.6s ease-in-out; 
+            display: inline-block; 
+        }
+        /* 紅方朝下 (0度) */
+        .piece.red .piece-text { transform: rotate(0deg); }
+        /* 黑方朝上 (翻轉180度，面對坐在對面的玩家) */
+        .piece.black .piece-text { transform: rotate(180deg); }
 
         @media (min-width: 400px) { .piece { font-size: 20px; } }
         
@@ -285,7 +292,6 @@
         const blackCols = ['9', '8', '7', '6', '5', '4', '3', '2', '1'];
         const numToChinese = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
-        // 【新增】切換主題邏輯
         function changeTheme() {
             const theme = themeSelect.value;
             document.documentElement.setAttribute('data-theme', theme);
@@ -310,7 +316,7 @@
             const dataToSave = {
                 pieces, currentTurn, history, moveRecord, gameActive, isFlipped,
                 alertText: alertEl.innerText,
-                theme: document.documentElement.getAttribute('data-theme') // 儲存主題
+                theme: document.documentElement.getAttribute('data-theme')
             };
             localStorage.setItem('gh_chess_pro_save', JSON.stringify(dataToSave));
         }
@@ -320,7 +326,6 @@
             if (savedData) {
                 const data = JSON.parse(savedData);
                 
-                // 恢復主題
                 if(data.theme) {
                     document.documentElement.setAttribute('data-theme', data.theme);
                     themeSelect.value = data.theme;
@@ -391,10 +396,15 @@
             pieces.forEach(piece => {
                 const pieceEl = document.createElement('div');
                 pieceEl.className = `piece ${piece.color} ${selectedPiece && selectedPiece.id === piece.id ? 'selected' : ''}`;
+                
+                // 將文字包在 span 裡面，方便 CSS 獨立旋轉控制
                 const textEl = document.createElement('span');
-                textEl.className = 'piece-text'; textEl.innerText = piece.type;
+                textEl.className = 'piece-text'; 
+                textEl.innerText = piece.type;
                 pieceEl.appendChild(textEl);
-                pieceEl.style.left = `calc(${piece.x} * 12.5%)`; pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
+                
+                pieceEl.style.left = `calc(${piece.x} * 12.5%)`; 
+                pieceEl.style.top = `calc(${piece.y} * 11.111%)`;
                 piecesLayer.appendChild(pieceEl);
             });
 
@@ -584,7 +594,6 @@
         function updateStatus() {
             if(gameActive) {
                 statusEl.innerText = currentTurn === 'red' ? '紅方下棋' : '黑方下棋';
-                // 這裡使用 CSS 變數，讓它依照目前主題的紅黑色動態變色
                 statusEl.style.color = currentTurn === 'red' ? 'var(--red-color)' : 'var(--black-color)';
             }
         }
